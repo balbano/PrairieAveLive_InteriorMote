@@ -30,12 +30,15 @@ void setup()
 void loop() 
 {
   uint8_t sampleMax = 0;
-  while (millis() - prevMillis < sampleWindow) {
+  
+  // Always take at least one sample.
+  do {
     uint8_t rawSample = getSample(micPin);
     if (rawSample > sampleMax) {
       sampleMax = rawSample;
     }
-  }
+  } while (millis() - prevMillis < sampleWindow);
+  
   prevMillis = millis();
   
   uint8_t factoredSample = factorSample(sampleMax, sampleFloor, sampleCeiling);
