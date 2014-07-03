@@ -39,6 +39,8 @@ uint8_t payload[] = {0};
 XBeeAddress64 addr64 = XBeeAddress64(0x0, 0x0); // coord 0x0013a200, 0x40ace8df
 ZBTxRequest zbTx = ZBTxRequest(addr64, payload, sizeof(payload));
 
+XBeeResponse response = XBeeResponse();
+
 // TIMERS
 const int timeBetweenTransmissions = 40; // 25 FPS. (Panel runs at 12 FPS).
 unsigned long prevTransmissionTime;
@@ -52,10 +54,10 @@ int numberOfTransmissions;
 
 void setup() 
 {
-  Serial.begin(9600);
+  Serial.begin(57600);
   xbee.setSerial(Serial);
   
-  softSerial.begin(4800);
+  softSerial.begin(57600);
   
   // Initialize the timers and counters;
   prevTransmissionTime = millis();
@@ -71,8 +73,9 @@ void loop()
     sampleMax = rawSample;
   }
   
-  if (millis() - prevTransmissionTime > timeBetweenTransmissions) {
-    prevTransmissionTime = millis();
+  xbee.readPacket();
+  if (xbee.getResponse().isAvailable()) {
+    //prevTransmissionTime = millis();
     uint8_t factoredSample = factorSample(sampleMax, sampleFloor, sampleCeiling);
     payload[0] = factoredSample;
     xbee.send(zbTx);
