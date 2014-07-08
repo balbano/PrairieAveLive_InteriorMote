@@ -36,9 +36,9 @@ const int samplesPerTx = numberOfInteriorMotes * 2;
 
 // AUDIO
 const int micPin = 1;
+uint8_t sampleMax; // Holds the max level during the sampling period.
 const uint8_t sampleFloor = 100; // Use mic_check sketch to determine value.
 const uint8_t sampleCeiling = 190; // Use mic_check sketch to determine value.
-uint8_t sampleMax; // Holds the max level during the sampling period.
 
 // XBEE
 XBee xbee = XBee();
@@ -86,12 +86,14 @@ void setup()
 
 void loop() 
 {
+  // Collect audio samples.
   uint8_t rawSample = getSample(micPin);
 
   if (rawSample > sampleMax) {
     sampleMax = rawSample;
   }
 
+  // If it's the end of the sampling period, update the payload.
   if (millis() - prevSampleTime > timeBetweenSamples) {
     prevSampleTime = millis();
     // Shift the payload values to the left and append the newest one on the right.
@@ -100,11 +102,13 @@ void loop()
     sampleMax = 0;
   }
   
+  // Check for a pull request and send the data if one has been received.
   if (lookForData(255)) {
     xbee.send(zbTx);
     numberOfTransmissions++;
   }
 
+  // If it's the end of the reporting period, print a report.
   if (millis() - prevReportTime > timeBetweenReports) {
     prevReportTime = millis();
     printReport();
@@ -123,7 +127,7 @@ uint8_t factorSample(uint8_t rawSample, uint8_t thresholdLow, uint8_t thresholdH
   return uint8_t(constrain(factoredSample, 0, 255));
 }
 
-boolean lookForData(uint8_t expectedData) {
+bool lookForData(uint8_t expectedData) {
   // Look for a packet containing the expected data until the buffer is empty.
   // Clear the buffer if the expected data is found.
   xbee.readPacket();
