@@ -27,7 +27,7 @@
 #include <SoftwareSerial.h>
 
 // NETWORK PARAMS
-const int numberOfInteriorMotes = 3;
+const int numberOfInteriorMotes = 6;
 // Controller alternates between polling an interior mote and the exterior
 // mote. GoL updates each time. Therefore, the number of samples needs to be
 // twice the number of interior motes to provide enough data to last until the
@@ -136,6 +136,17 @@ bool lookForData(uint8_t expectedData) {
     if (xbee.getResponse().getApiId() == ZB_RX_RESPONSE) {
       xbee.getResponse().getZBRxResponse(rx);
       uint8_t data = rx.getData()[0];
+
+      int msb = rx.getRemoteAddress64().getMsb();
+      int lsb = rx.getRemoteAddress64().getLsb();
+
+      softSerial.print("Remote Address MSB: ");
+      softSerial.println(msb, HEX);
+      softSerial.print("Remote Address lSB: ");
+      softSerial.println(lsb, HEX);
+      softSerial.print("Data: ");
+      softSerial.println(data);
+      softSerial.println();
 
       if (data == expectedData) {
         addr16 = rx.getRemoteAddress16();
